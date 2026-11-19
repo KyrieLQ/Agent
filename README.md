@@ -4,7 +4,7 @@
 
 [交互工作台 HTML](demos/index.html) · [逐段证据与轨迹哈希](data/cases.json) · [案例来源与评测口径](docs/evaluation.md)
 
-每个案例先展示第一张对照图。直接在 README 点击图下方的「下一张」，即可逐张展开后续画面。画面按工具调用和返回结果重建，对话为摘要。
+每个案例有一个回放框，默认展示第一张。点击对应的「下一张」，同一个框会切换到该阶段。画面按工具调用和返回结果重建，对话为摘要。
 
 ## 三组失败与成功对照
 
@@ -16,72 +16,78 @@
 
 ### Telecom · 恢复数据连接
 
-![Telecom 1/4](demos/frames/telecom-1.png)
-
-<details>
-<summary>下一张 · 2/4</summary>
-
-![Telecom 2/4](demos/frames/telecom-2.png)
-
-<details>
-<summary>下一张 · 3/4</summary>
-
-![Telecom 3/4](demos/frames/telecom-3.png)
-
-<details>
-<summary>下一张 · 4/4（评测结果）</summary>
-
-![Telecom 4/4](demos/telecom.png)
-
+<table>
+<tr>
+<td>
+<details name="telecom-replay" open>
+<summary>第 1 张 · 1/4 · 用户报告境外断网</summary>
+<img src="demos/frames/telecom-1.png" alt="Telecom 1/4：用户报告境外断网">
 </details>
+<details name="telecom-replay">
+<summary>下一张 · 2/4 · 排查设备与流量</summary>
+<img src="demos/frames/telecom-2.png" alt="Telecom 2/4：排查设备与流量">
 </details>
+<details name="telecom-replay">
+<summary>下一张 · 3/4 · 处理流量限制</summary>
+<img src="demos/frames/telecom-3.png" alt="Telecom 3/4：处理流量限制">
 </details>
+<details name="telecom-replay">
+<summary>下一张 · 4/4 · 验证网络恢复</summary>
+<img src="demos/telecom.png" alt="Telecom 4/4：验证网络恢复">
+</details>
+</td>
+</tr>
+</table>
 
 ### Retail · 提交两笔退货
 
-![Retail 1/4](demos/frames/retail-1.png)
-
-<details>
-<summary>下一张 · 2/4</summary>
-
-![Retail 2/4](demos/frames/retail-2.png)
-
-<details>
-<summary>下一张 · 3/4</summary>
-
-![Retail 3/4](demos/frames/retail-3.png)
-
-<details>
-<summary>下一张 · 4/4（评测结果）</summary>
-
-![Retail 4/4](demos/retail.png)
-
+<table>
+<tr>
+<td>
+<details name="retail-replay" open>
+<summary>第 1 张 · 1/4 · 用户提出退货</summary>
+<img src="demos/frames/retail-1.png" alt="Retail 1/4：用户提出退货">
 </details>
+<details name="retail-replay">
+<summary>下一张 · 2/4 · 定位两笔订单</summary>
+<img src="demos/frames/retail-2.png" alt="Retail 2/4：定位两笔订单">
 </details>
+<details name="retail-replay">
+<summary>下一张 · 3/4 · 确认后执行写操作</summary>
+<img src="demos/frames/retail-3.png" alt="Retail 3/4：确认后执行写操作">
 </details>
+<details name="retail-replay">
+<summary>下一张 · 4/4 · 检查最终订单状态</summary>
+<img src="demos/retail.png" alt="Retail 4/4：检查最终订单状态">
+</details>
+</td>
+</tr>
+</table>
 
 ### Airline · 复订历史航班
 
-![Airline 1/4](demos/frames/airline-1.png)
-
-<details>
-<summary>下一张 · 2/4</summary>
-
-![Airline 2/4](demos/frames/airline-2.png)
-
-<details>
-<summary>下一张 · 3/4</summary>
-
-![Airline 3/4](demos/frames/airline-3.png)
-
-<details>
-<summary>下一张 · 4/4（评测结果）</summary>
-
-![Airline 4/4](demos/airline.png)
-
+<table>
+<tr>
+<td>
+<details name="airline-replay" open>
+<summary>第 1 张 · 1/4 · 用户提出复订需求</summary>
+<img src="demos/frames/airline-1.png" alt="Airline 1/4：用户提出复订需求">
 </details>
+<details name="airline-replay">
+<summary>下一张 · 2/4 · 查找原航班</summary>
+<img src="demos/frames/airline-2.png" alt="Airline 2/4：查找原航班">
 </details>
+<details name="airline-replay">
+<summary>下一张 · 3/4 · 提交或结束对话</summary>
+<img src="demos/frames/airline-3.png" alt="Airline 3/4：提交或结束对话">
 </details>
+<details name="airline-replay">
+<summary>下一张 · 4/4 · 检查行程是否创建</summary>
+<img src="demos/airline.png" alt="Airline 4/4：检查行程是否创建">
+</details>
+</td>
+</tr>
+</table>
 
 ## 评测结果
 
