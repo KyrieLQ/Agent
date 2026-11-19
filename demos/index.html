@@ -39,7 +39,7 @@ button[aria-pressed=true]{background:#b1deff;color:var(--ink);border-color:#b1de
 .route span:first-child,.route span:last-child{min-width:72px}.route span:last-child{text-align:right}.route .plane-icon{font-size:18px}
 .flight{display:flex;justify-content:space-between;align-items:center;padding:12px 0 0;margin-top:10px;border-top:1px dashed #a1afc2;font-size:15px}
 .booking{padding:10px 14px;background:#eef4fc;font-size:14px;display:flex;align-items:center;justify-content:space-between;gap:8px}
-.controls{margin-top:13px}.controls input{flex:1;min-width:100px;accent-color:#a7dcff}
+.controls{margin-top:13px;justify-content:space-between}.step-count{color:var(--muted);font-size:14px}
 .legend,details{color:var(--muted);font-size:13px;margin-top:9px;overflow-wrap:anywhere}details summary{cursor:pointer}details code{display:block}
 .capture main{margin-top:22px}.capture .tabs,.capture .controls,.capture details{display:none}.capture .dialogue{min-height:86px}
 @media(max-width:670px){main{width:calc(100% - 24px);margin-top:14px}.comparison{grid-template-columns:1fr}.timeline li{font-size:11px}.lane-top h2{font-size:16px}.desk{min-height:0}}
@@ -55,8 +55,8 @@ button[aria-pressed=true]{background:#b1deff;color:var(--ink);border-color:#b1de
   <article class="lane"><div class="lane-top"><h2>SFT＋GRPO＋手册</h2><span id="score1"></span></div><div id="dialogue1" class="dialogue"></div><div class="desk" id="desk1"></div></article>
 </section>
 <div class="controls">
- <button id="prev" type="button">上一步</button><button id="play" type="button">播放</button><button id="next" type="button">下一步</button>
- <input id="seek" type="range" min="0" max="3" value="0" aria-label="跳转回放阶段">
+ <span id="step-count" class="step-count" aria-live="polite"></span>
+ <button id="next" type="button">下一张</button>
 </div>
 <p class="legend" id="legend"></p>
 <details><summary>任务与轨迹索引</summary><p id="task"></p><p id="refs"></p><code id="hash0"></code><code id="hash1"></code></details>
@@ -67,7 +67,7 @@ const {cases,scenes}=JSON.parse(document.getElementById("replay-data").textConte
 const $=id=>document.getElementById(id);
 const query=new URLSearchParams(location.search);
 let index=Math.max(0,cases.findIndex(c=>c.id===query.get("case")));
-let stage=Math.min(3,Math.max(0,Number.parseInt(query.get("step"),10)||0)),timer=null;
+let stage=Math.min(3,Math.max(0,Number.parseInt(query.get("step"),10)||0));
 if(query.get("capture")==="1")document.body.classList.add("capture");
 function el(tag,text,cls){
  const node=document.createElement(tag);
@@ -78,7 +78,7 @@ function el(tag,text,cls){
 function append(node,...children){node.append(...children);return node;}
 const tabs=cases.map((c,i)=>{
  const button=el("button",c.domain);
- button.type="button";button.onclick=()=>{stop();index=i;stage=0;render();};$("tabs").append(button);return button;
+ button.type="button";button.onclick=()=>{index=i;stage=0;render();};$("tabs").append(button);return button;
 });
 function badge(text,ok){return el("span",text,"tag"+(ok?" good":""));}
 function row(name,value){return append(el("div",undefined,"row"),el("span",name),el("strong",value));}
@@ -131,17 +131,13 @@ function render(){
  }
  $("legend").textContent=scene.legend+" 对话为摘要，界面为状态重建。";
  $("task").textContent="官方任务 ID："+item.task;$("refs").textContent=item.refs.join(" ");
- $("seek").value=stage;$("prev").disabled=stage===0;$("next").disabled=stage===3;
+ $("step-count").textContent="第 "+(stage+1)+" / "+scene.timeline.length+" 张";
+ $("next").disabled=stage===scene.timeline.length-1;
 }
-function stop(){clearInterval(timer);timer=null;$("play").textContent="播放";}
-function move(delta){stage=Math.max(0,Math.min(3,stage+delta));render();}
-$("prev").onclick=()=>{stop();move(-1);};$("next").onclick=()=>{stop();move(1);};
-$("seek").oninput=event=>{stop();stage=Number(event.target.value);render();};
-$("play").onclick=()=>{
- if(timer){stop();return;}
- if(stage===3){stage=0;render();}
- $("play").textContent="暂停";
- timer=setInterval(()=>{move(1);if(stage===3)stop();},2400);
+$("next").onclick=()=>{
+ if(stage>=scenes[cases[index].id].timeline.length-1)return;
+ stage+=1;
+ render();
 };
 render();
 </script>

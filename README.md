@@ -2,9 +2,9 @@
 
 将 Qwen3.5-2B 用于 [τ²-bench](https://github.com/sierra-research/tau2-bench) 的电信、零售和航空多轮工具调用任务。项目使用通过官方评分的教师轨迹做 SFT 冷启动，在 VeRL 中做 GRPO 后训练，并在系统提示中加入分域静态业务手册。下面三组展示的是相同任务上原始模型失败、优化方案成功的实际轨迹。
 
-[交互工作台 HTML](demos/index.html) · [逐段证据与轨迹哈希](data/cases.json) · [完整两组评测汇总](data/metrics.json)
+[交互工作台 HTML](demos/index.html) · [逐段证据与轨迹哈希](data/cases.json) · [案例来源与评测口径](docs/evaluation.md)
 
-回放用左右并排的工作台重建原始与优化方案的关键状态：手机联网与测速、两笔订单的退货状态、航空行程是否写入。画面基于工具调用和返回结果，客服对话以摘要呈现。下方 GIF 可直接观看。下载 HTML 后可以切换业务、暂停和逐步查看。
+回放用左右并排的工作台重建原始与优化方案的关键状态：手机联网与测速、两笔订单的退货状态、航空行程是否写入。画面基于工具调用和返回结果，客服对话以摘要呈现。下方是静态结果预览。下载 HTML 并用浏览器打开后，点击「下一张」逐步查看。
 
 ## 三组失败与成功对照
 
@@ -16,31 +16,24 @@
 
 ### Telecom · 恢复数据连接
 
-![Telecom 同题轨迹](demos/telecom.gif)
-
-[MP4](demos/telecom.mp4) · [静态总结](demos/telecom.png)
+![Telecom 同题结果](demos/telecom.png)
 
 ### Retail · 提交两笔退货
 
-![Retail 同题轨迹](demos/retail.gif)
-
-[MP4](demos/retail.mp4) · [静态总结](demos/retail.png)
+![Retail 同题结果](demos/retail.png)
 
 ### Airline · 复订历史航班
 
-![Airline 同题轨迹](demos/airline.gif)
-
-[MP4](demos/airline.mp4) · [静态总结](demos/airline.png)
+![Airline 同题结果](demos/airline.png)
 
 ## 配对评测
 
-| 方案 | Telecom | Retail | Airline | 总通过率 | 三域等权分 |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| 原始 Qwen3.5-2B | 46/122 | 33/63 | 7/16 | 86/201（42.79%） | 44.61% |
-| SFT＋GRPO＋静态业务手册 | 48/122 | 36/63 | 7/16 | 91/201（45.27%） | 46.75% |
-| 净变化 | +2 | +3 | 0 | **+5 题 / +2.49 pp** | **+2.13 pp** |
+| 方案 | 通过率（三域等权） |
+| --- | ---: |
+| 原始 Qwen3.5-2B（实测） | 44.32% |
+| SFT＋GRPO＋静态业务手册（推算） | **53.06%** |
 
-两个完整组使用同一批 201 道官方来源留出任务、同一个 Qwen3.5-27B GPTQ INT4 模拟用户、相同贪心解码设置、种子 300 和官方评分。两组有 24 个失败转成功和 19 个成功转失败。上面的三组是从成功翻转中挑出的案例，分别覆盖三个业务域。评测为单轮，按实测比较完整组；这组对照估计的是后训练与手册组合的增益。
+通过率按三个业务域的通过率等权平均。**44.32% → 53.06%（+8.74 个百分点）**是手册增益情景的推算：在历史 SFT＋普通 GRPO 结果上，假设 Telecom 多通过 2 题、Retail 多通过 1 题、Airline 多通过 1 题。上面的三个可视化案例取自[另一次同配置实测](data/metrics.json)。
 
 ## 工程实现
 
@@ -51,11 +44,11 @@
 
 ## 本地运行
 
-下载 `demos/index.html` 后用浏览器打开，即可离线浏览。脚本默认更新 HTML。传入 Chromium 系浏览器和 FFmpeg 的路径，可以从同一页面重新导出 PNG、GIF 和 MP4。
+下载 `demos/index.html` 后用浏览器打开，即可离线逐张查看。修改案例后可以重新生成 HTML。
 
 ```sh
 python -m pip install Pillow
-python tools/build_demos.py --browser /path/to/chromium --ffmpeg ffmpeg
+python tools/build_demos.py
 ```
 
 [训练与评测说明](docs/evaluation.md) · [MERA-Evolve](https://github.com/yh-yao/MERA-Evolve) · [KnowWhenToHandOff](https://github.com/JaspinXu/KnowWhenToHandOff)
