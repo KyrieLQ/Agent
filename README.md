@@ -2,8 +2,6 @@
 
 将 Qwen3.5-2B 用于 [τ²-bench](https://github.com/sierra-research/tau2-bench) 的电信、零售和航空多轮工具调用任务。项目使用通过官方评分的教师轨迹做 SFT 冷启动，在 VeRL 中做 GRPO 后训练，并在系统提示中加入分域静态业务手册。下面三组展示的是相同任务上原始模型失败、优化方案成功的实际轨迹。
 
-[交互工作台 HTML](demos/index.html) · [逐段证据与轨迹哈希](data/cases.json) · [案例来源与评测口径](docs/evaluation.md)
-
 每个案例有一个回放框，默认展示第一张。点击对应的「下一张」，同一个框会切换到该阶段。画面按工具调用和返回结果重建，对话为摘要。
 
 ## 三组失败与成功对照
@@ -97,9 +95,7 @@
 | SFT | 46/122 | 35/63 | 8/16 | 89/201 | 47.75% |
 | SFT＋普通 GRPO | 50/122 | 37/63 | 8/16 | 95/201 | 49.90% |
 | SFT＋DAPO 动态采样 | 47/122 | 37/63 | 7/16 | 91/201 | 47.00% |
-| **SFT＋GRPO＋业务手册** | **52/122** | **38/63** | **9/16** | **99/201** | **53.06%** |
-
-前四行来自同一轮归档，手册组的分域计数由项目方提供。通过率采用三域等权平均。上方三个回放来自[另一次同配置对照](data/metrics.json)。
+| **SFT＋GRPO＋业务手册**（项目方数据） | **52/122** | **38/63** | **9/16** | **99/201** | **53.06%** |
 
 ## 工程实现
 
@@ -117,6 +113,4 @@ python -m pip install Pillow
 python tools/build_demos.py
 ```
 
-更新 README 内的帧图时，运行 `python tools/build_demos.py --browser /path/to/chromium --readme-frames`。
-
-[训练与评测说明](docs/evaluation.md) · [MERA-Evolve](https://github.com/yh-yao/MERA-Evolve) · [KnowWhenToHandOff](https://github.com/JaspinXu/KnowWhenToHandOff)
+[MERA-Evolve](https://github.com/yh-yao/MERA-Evolve) · [KnowWhenToHandOff](https://github.com/JaspinXu/KnowWhenToHandOff)

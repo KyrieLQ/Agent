@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>τ²-bench 客服案例回放</title>
+<style>
+:root{color-scheme:dark;--bg:#0d1627;--card:#152238;--line:#344962;--text:#f4f7ff;--muted:#bfcee3;--accent:#a7d9ff}
+*{box-sizing:border-box}body{margin:0;color:var(--text);background:var(--bg);font:16px/1.5 system-ui,"Microsoft YaHei",sans-serif}
+main{width:min(1100px,calc(100% - 32px));margin:28px auto 48px}
+h1,h2,p{margin:0}h1{font-size:clamp(26px,5vw,42px);line-height:1.15}h2{font-size:clamp(17px,3vw,23px)}
+.intro{color:var(--muted);margin:8px 0 20px}
+nav{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:18px}a{color:var(--accent)}
+.case{margin:16px 0 28px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--card);scroll-margin-top:12px}
+.case h2,.bar{padding:12px 16px}.frame{display:block;width:100%;height:auto;aspect-ratio:1280/700;background:var(--bg)}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:10px}output{color:var(--muted);font-size:14px}
+button{color:#0b1b30;background:var(--accent);border:none;border-radius:8px;padding:9px 17px;font:inherit;font-weight:700;cursor:pointer}
+button:disabled{color:#d7e1ef;background:#3c4d65;cursor:default}
+:focus-visible{outline:3px solid var(--accent);outline-offset:4px}
+footer{font-size:14px;color:var(--muted)}
+</style>
+</head>
+<body>
+<main>
+<h1>三组同题案例回放</h1>
+<p class="intro">每个案例独立翻页。点「下一张」时，画面在原位置替换。</p>
+<nav aria-label="跳到案例"><a href="#telecom">电信</a><a href="#retail">零售</a><a href="#airline">航空</a></nav>
+<section class="case" id="telecom" aria-labelledby="telecom-title">
+<h2 id="telecom-title">电信 · 恢复漫游数据</h2>
+<img class="frame" width="1280" height="700" src="demos/frames/telecom-1.png" alt="电信第 1 张：用户报告境外断网">
+<div class="bar"><output aria-live="polite">1 / 4</output><button type="button">下一张</button></div>
+</section>
+<section class="case" id="retail" aria-labelledby="retail-title">
+<h2 id="retail-title">零售 · 提交两笔退货</h2>
+<img class="frame" width="1280" height="700" src="demos/frames/retail-1.png" alt="零售第 1 张：用户提出退货">
+<div class="bar"><output aria-live="polite">1 / 4</output><button type="button">下一张</button></div>
+</section>
+<section class="case" id="airline" aria-labelledby="airline-title">
+<h2 id="airline-title">航空 · 复订历史航班</h2>
+<img class="frame" width="1280" height="700" src="demos/frames/airline-1.png" alt="航空第 1 张：用户提出复订需求">
+<div class="bar"><output aria-live="polite">1 / 4</output><button type="button">下一张</button></div>
+</section>
+<footer>画面按工具调用和返回重建，对话为摘要。<a href="https://github.com/KyrieLQ/tau2-customer-agent">查看项目与证据</a></footer>
+</main>
+<script>
+const labels={
+ telecom:["电信","用户报告境外断网","排查设备与流量","处理流量限制","验证网络恢复"],
+ retail:["零售","用户提出退货","定位两笔订单","确认后执行写操作","检查最终订单状态"],
+ airline:["航空","用户提出复订需求","查找原航班","提交或结束对话","检查行程是否创建"]
+};
+const params=new URLSearchParams(location.search);
+const selected=params.get("case");
+const initialStep=params.get("step")==="2"?2:1;
+
+for(const section of document.querySelectorAll(".case")){
+ const name=section.id;
+ const image=section.querySelector("img");
+ const next=section.querySelector("button");
+ const counter=section.querySelector("output");
+ let step=name===selected?initialStep:1;
+ function path(frame){return frame===4?"demos/"+name+".png":"demos/frames/"+name+"-"+frame+".png";}
+ function show(){
+   image.src=path(step);
+   image.alt=labels[name][0]+"第 "+step+" 张："+labels[name][step];
+   counter.textContent=step+" / 4";
+   next.disabled=step===4;
+   next.textContent=step===4?"已到最后一张":"下一张";
+ }
+ next.addEventListener("click",()=>{if(step<4){step+=1;show();}});
+ show();
+}
+</script>
+</body>
+</html>
