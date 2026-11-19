@@ -93,7 +93,7 @@
 
 ## 工程实现
 
-- 用 27B 教师生成轨迹并用官方评分筛选，2B 使用 VeRL＋LoRA 做 SFT 与普通 GRPO。另做 DAPO 动态采样对照。
+- 用 27B 教师生成轨迹并用官方评分筛选，2B 使用 VeRL＋LoRA 做 SFT 与 GRPO。另做 DAPO 动态采样对照。
 - 按官方业务政策和成功轨迹提炼静态手册（[电信](playbooks/telecom.txt)、[零售](playbooks/retail.txt)、[航空](playbooks/airline.txt)），注入系统提示，引导身份核验、业务确认、提交写操作与结果复核。
 - 2B 使用 BF16 推理。评测通过 vLLM 部署，记录官方奖励、结束原因、工具调用以及可比对的轨迹哈希。
 - 回放按关键步骤摘编同轮轨迹，省略账户、地址和支付标识。
@@ -104,7 +104,7 @@
 | --- | --- |
 | [src/run_task.py](src/run_task.py) | 运行 τ²-bench 多轮工具交互，按业务域挂载可选手册 |
 | [training/prepare_teacher.py](training/prepare_teacher.py) | 筛选通过官方评分的教师轨迹，保留客服可见的工具消息 |
-| [training/train.sh](training/train.sh) · [合并 adapter](training/merge_adapter.py) | 调用 VeRL 入口进行 SFT 和普通 GRPO，导出可部署检查点 |
+| [training/train.sh](training/train.sh) · [合并 adapter](training/merge_adapter.py) | 调用 VeRL 入口进行 SFT 和 GRPO，导出可部署检查点 |
 | [deploy/serve.sh](deploy/serve.sh) · [部署说明](deploy/README.md) | 用 vLLM 部署 2B 客服和 27B 模拟用户 |
 
 [MERA-Evolve](https://github.com/yh-yao/MERA-Evolve) · [KnowWhenToHandOff](https://github.com/JaspinXu/KnowWhenToHandOff)
