@@ -33,7 +33,7 @@ def screenshot(browser, url, output, profile):
         return frame.convert("RGB")
 
 
-def render_media(case_id, dest, browser, ffmpeg):
+def render_media(case_id, dest, browser, ffmpeg, readme_frames=False):
     with TemporaryDirectory() as tmp:
         folder = Path(tmp)
         frames = [
@@ -42,6 +42,12 @@ def render_media(case_id, dest, browser, ffmpeg):
             for index in range(4)
         ]
         frames[-1].save(dest / f"{case_id}.png", optimize=True)
+        if readme_frames:
+            frame_dir = dest / "frames"
+            frame_dir.mkdir(exist_ok=True)
+            for number, frame in enumerate(frames[:-1], start=1):
+                frame.save(frame_dir / f"{case_id}-{number}.png", optimize=True)
+            return
         palette = [frame.quantize(colors=150) for frame in frames]
         palette[0].save(dest / f"{case_id}.gif", save_all=True, append_images=palette[1:],
                         duration=[s * 1000 for s in HOLDS], loop=0, disposal=2)
@@ -61,7 +67,10 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--browser", help="Path to Chrome, Edge, or Chromium for image/video export")
     parser.add_argument("--ffmpeg", default=shutil.which("ffmpeg"))
+    parser.add_argument("--readme-frames", action="store_true", help="Export only the README's static frames")
     args = parser.parse_args()
+    if args.readme_frames and not args.browser:
+        parser.error("--readme-frames requires --browser")
     cases = json.loads((ROOT / "data/cases.json").read_text(encoding="utf-8"))
     scenes = json.loads((ROOT / "data/product-replay.json").read_text(encoding="utf-8"))
     if {case["id"] for case in cases} != scenes.keys():
@@ -73,7 +82,7 @@ def main():
     (dest / "index.html").write_text(template.replace("__REPLAY_DATA__", data), encoding="utf-8")
     if args.browser:
         for case in cases:
-            render_media(case["id"], dest, args.browser, args.ffmpeg)
+            render_media(case["id"], dest, args.browser, args.ffmpeg, args.readme_frames)
             print(f"Rendered {case['domain']} comparison replay.")
 
 

@@ -4,7 +4,7 @@
 
 [交互工作台 HTML](demos/index.html) · [逐段证据与轨迹哈希](data/cases.json) · [案例来源与评测口径](docs/evaluation.md)
 
-回放用左右并排的工作台重建原始与优化方案的关键状态：手机联网与测速、两笔订单的退货状态、航空行程是否写入。画面基于工具调用和返回结果，客服对话以摘要呈现。下方是静态结果预览。下载 HTML 并用浏览器打开后，点击「下一张」逐步查看。
+每个案例先展示第一张对照图。直接在 README 点击图下方的「下一张」，即可逐张展开后续画面。画面按工具调用和返回结果重建，对话为摘要。
 
 ## 三组失败与成功对照
 
@@ -16,15 +16,72 @@
 
 ### Telecom · 恢复数据连接
 
-![Telecom 同题结果](demos/telecom.png)
+![Telecom 1/4](demos/frames/telecom-1.png)
+
+<details>
+<summary>下一张 · 2/4</summary>
+
+![Telecom 2/4](demos/frames/telecom-2.png)
+
+<details>
+<summary>下一张 · 3/4</summary>
+
+![Telecom 3/4](demos/frames/telecom-3.png)
+
+<details>
+<summary>下一张 · 4/4（评测结果）</summary>
+
+![Telecom 4/4](demos/telecom.png)
+
+</details>
+</details>
+</details>
 
 ### Retail · 提交两笔退货
 
-![Retail 同题结果](demos/retail.png)
+![Retail 1/4](demos/frames/retail-1.png)
+
+<details>
+<summary>下一张 · 2/4</summary>
+
+![Retail 2/4](demos/frames/retail-2.png)
+
+<details>
+<summary>下一张 · 3/4</summary>
+
+![Retail 3/4](demos/frames/retail-3.png)
+
+<details>
+<summary>下一张 · 4/4（评测结果）</summary>
+
+![Retail 4/4](demos/retail.png)
+
+</details>
+</details>
+</details>
 
 ### Airline · 复订历史航班
 
-![Airline 同题结果](demos/airline.png)
+![Airline 1/4](demos/frames/airline-1.png)
+
+<details>
+<summary>下一张 · 2/4</summary>
+
+![Airline 2/4](demos/frames/airline-2.png)
+
+<details>
+<summary>下一张 · 3/4</summary>
+
+![Airline 3/4](demos/frames/airline-3.png)
+
+<details>
+<summary>下一张 · 4/4（评测结果）</summary>
+
+![Airline 4/4](demos/airline.png)
+
+</details>
+</details>
+</details>
 
 ## 配对评测
 
@@ -50,5 +107,7 @@
 python -m pip install Pillow
 python tools/build_demos.py
 ```
+
+更新 README 内的帧图时，运行 `python tools/build_demos.py --browser /path/to/chromium --readme-frames`。
 
 [训练与评测说明](docs/evaluation.md) · [MERA-Evolve](https://github.com/yh-yao/MERA-Evolve) · [KnowWhenToHandOff](https://github.com/JaspinXu/KnowWhenToHandOff)
