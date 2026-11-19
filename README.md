@@ -2,7 +2,7 @@
 
 将 Qwen3.5-2B 用于 [τ²-bench](https://github.com/sierra-research/tau2-bench) 的电信、零售和航空多轮工具调用任务。项目使用通过官方评分的教师轨迹做 SFT 冷启动，在 VeRL 中做 GRPO 后训练，并在系统提示中加入分域静态业务手册。下面三组展示的是相同任务上原始模型失败、优化方案成功的实际轨迹。
 
-每个案例有一个回放框，默认展示第一张。点击对应的「下一张」，同一个框会切换到该阶段。画面按工具调用和返回结果重建，对话为摘要。
+每个案例先显示第一张对照图。点「下一张」进入在线回放的第二张，之后用同一个按钮在原画框里逐张切换。画面按工具调用和返回结果重建，对话为摘要。
 
 ## 三组失败与成功对照
 
@@ -14,78 +14,21 @@
 
 ### Telecom · 恢复数据连接
 
-<table>
-<tr>
-<td>
-<details name="telecom-replay" open>
-<summary>第 1 张 · 1/4 · 用户报告境外断网</summary>
-<img src="demos/frames/telecom-1.png" alt="Telecom 1/4：用户报告境外断网">
-</details>
-<details name="telecom-replay">
-<summary>下一张 · 2/4 · 排查设备与流量</summary>
-<img src="demos/frames/telecom-2.png" alt="Telecom 2/4：排查设备与流量">
-</details>
-<details name="telecom-replay">
-<summary>下一张 · 3/4 · 处理流量限制</summary>
-<img src="demos/frames/telecom-3.png" alt="Telecom 3/4：处理流量限制">
-</details>
-<details name="telecom-replay">
-<summary>下一张 · 4/4 · 验证网络恢复</summary>
-<img src="demos/telecom.png" alt="Telecom 4/4：验证网络恢复">
-</details>
-</td>
-</tr>
-</table>
+![Telecom 第 1 张：用户报告境外断网](demos/frames/telecom-1.png)
+
+[**下一张**](https://kyrielq.github.io/tau2-customer-agent/?case=telecom&step=2#telecom)
 
 ### Retail · 提交两笔退货
 
-<table>
-<tr>
-<td>
-<details name="retail-replay" open>
-<summary>第 1 张 · 1/4 · 用户提出退货</summary>
-<img src="demos/frames/retail-1.png" alt="Retail 1/4：用户提出退货">
-</details>
-<details name="retail-replay">
-<summary>下一张 · 2/4 · 定位两笔订单</summary>
-<img src="demos/frames/retail-2.png" alt="Retail 2/4：定位两笔订单">
-</details>
-<details name="retail-replay">
-<summary>下一张 · 3/4 · 确认后执行写操作</summary>
-<img src="demos/frames/retail-3.png" alt="Retail 3/4：确认后执行写操作">
-</details>
-<details name="retail-replay">
-<summary>下一张 · 4/4 · 检查最终订单状态</summary>
-<img src="demos/retail.png" alt="Retail 4/4：检查最终订单状态">
-</details>
-</td>
-</tr>
-</table>
+![Retail 第 1 张：用户提出退货](demos/frames/retail-1.png)
+
+[**下一张**](https://kyrielq.github.io/tau2-customer-agent/?case=retail&step=2#retail)
 
 ### Airline · 复订历史航班
 
-<table>
-<tr>
-<td>
-<details name="airline-replay" open>
-<summary>第 1 张 · 1/4 · 用户提出复订需求</summary>
-<img src="demos/frames/airline-1.png" alt="Airline 1/4：用户提出复订需求">
-</details>
-<details name="airline-replay">
-<summary>下一张 · 2/4 · 查找原航班</summary>
-<img src="demos/frames/airline-2.png" alt="Airline 2/4：查找原航班">
-</details>
-<details name="airline-replay">
-<summary>下一张 · 3/4 · 提交或结束对话</summary>
-<img src="demos/frames/airline-3.png" alt="Airline 3/4：提交或结束对话">
-</details>
-<details name="airline-replay">
-<summary>下一张 · 4/4 · 检查行程是否创建</summary>
-<img src="demos/airline.png" alt="Airline 4/4：检查行程是否创建">
-</details>
-</td>
-</tr>
-</table>
+![Airline 第 1 张：用户提出复订需求](demos/frames/airline-1.png)
+
+[**下一张**](https://kyrielq.github.io/tau2-customer-agent/?case=airline&step=2#airline)
 
 ## 评测结果
 
