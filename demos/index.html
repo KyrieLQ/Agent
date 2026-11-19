@@ -1,78 +1,147 @@
 <!doctype html>
 <html lang="zh-CN">
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>τ²-bench · 同题轨迹回放</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>客服工作台 · 同题回放</title>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#0a1220;color:#eef4ff;font:16px/1.6 system-ui,sans-serif}
-main{width:min(1100px,calc(100% - 32px));margin:36px auto 52px}
-h1{font-size:clamp(28px,5vw,46px);line-height:1.15;margin:10px 0 15px}
-p{margin:8px 0;color:#b8c7dd}.tabs,.control{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-button{font:inherit;padding:9px 15px;background:#17283e;color:#eef4ff;border:1px solid #4a617c;border-radius:9px;cursor:pointer}
-button[aria-pressed=true]{background:#a7dcff;color:#0a1220;border-color:#a7dcff;font-weight:700}button:disabled{opacity:.45;cursor:default}
-button:focus-visible,input:focus-visible{outline:3px solid #a7dcff;outline-offset:3px}
-.case{margin-top:23px;background:#101c2e;border:1px solid #30445d;border-radius:17px;padding:20px}
-h2,h3{margin:0}.pair{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0}
-article{min-height:180px;padding:17px;border:1px solid #415670;border-radius:12px;background:#142238}
-.failure{color:#ffb3a7}.success{color:#9cebd3}.state{font-size:14px;color:#b8c7dd}
-code{display:inline-block;overflow-wrap:anywhere;color:#a7dcff;margin-top:10px}.control input{flex:1;min-width:100px;accent-color:#a7dcff}
-summary{cursor:pointer}details code{display:block;font-size:12px}
-@media(max-width:620px){main{margin-top:20px}.pair{grid-template-columns:1fr}article{min-height:0}}
+:root{--bg:#0d1627;--text:#f4f7ff;--muted:#bdcbe1;--line:#344962;--panel:#162236;--ink:#172943;--success:#08705d;--failure:#a84924}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,"Microsoft YaHei",sans-serif}
+main{width:min(1240px,calc(100% - 40px));margin:24px auto 40px}
+h1,h2,h3,p{margin:0}h1{font-size:clamp(26px,5vw,42px);line-height:1.18;letter-spacing:-.03em}.eyebrow{font-size:13px;font-weight:750;color:#9ed8ff;margin-bottom:5px;letter-spacing:.08em}
+.sub{margin:7px 0 14px;color:var(--muted)}.tabs,.controls{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+button{border:1px solid #526883;background:#20334b;color:var(--text);padding:8px 14px;border-radius:8px;font:inherit;font-weight:650;cursor:pointer}
+button[aria-pressed=true]{background:#b1deff;color:var(--ink);border-color:#b1deff}button:disabled{opacity:.42;cursor:default}
+:focus-visible{outline:3px solid #9ed8ff;outline-offset:3px}
+.timeline{list-style:none;margin:18px 0 12px;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+.timeline li{border-top:3px solid #4a607b;color:var(--muted);padding:5px 0;font-size:14px}.timeline [aria-current=step]{border-color:#9ed8ff;color:#f2f8ff;font-weight:750}
+.comparison{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.lane{background:var(--panel);min-width:0;overflow:hidden;border:1px solid var(--line);border-radius:16px}
+.lane-top{padding:13px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.lane-top h2{font-size:19px}.lane-top span{border-radius:999px;background:#2d4058;padding:4px 10px;white-space:nowrap;font-size:13px;font-weight:750}
+.lane-top .failed{background:#55392c;color:#ffceb4}.lane-top .passed{background:#124b42;color:#b5f6de}
+.dialogue{padding:10px 16px 11px;background:#1e3047;min-height:97px}.quote{font-size:16px}
+.action{color:#c4e3ff;font-size:13px;margin-top:5px;overflow-wrap:anywhere}.action code{color:#a4d5fb}
+.desk{display:grid;place-items:center;min-height:312px;margin:0;padding:14px 14px 18px;background:linear-gradient(145deg,#eff5fb,#dce8f4);color:var(--ink)}
+.surface{width:100%;max-width:470px;border-radius:12px;background:white;overflow:hidden;box-shadow:0 6px 19px #182f4a24;border:1px solid #cddbec}
+.surface h3{font-size:15px;padding:11px 14px;background:#f1f6fc}.surface p{margin:0}
+.phone{width:min(285px,100%);border:7px solid #263b54;border-radius:23px;box-shadow:0 8px 18px #1d3a603b}
+.phone h3{padding:8px 14px}.phone-body{padding:9px 14px 11px}
+.network{display:flex;justify-content:space-between;align-items:center;padding-bottom:8px;font-size:20px;font-weight:750}
+.bars{height:23px;display:flex;align-items:end;gap:4px}.bars i{display:block;width:5px;border-radius:2px;background:#bbc8d6}.bars i:nth-child(1){height:7px}.bars i:nth-child(2){height:12px}.bars i:nth-child(3){height:17px}.bars i:nth-child(4){height:23px}.online .bars i{background:#139575}
+.row{padding:8px 0;border-top:1px solid #e1e9f2;display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:14px}
+.row span:first-child{color:#52647b}.row strong{font-size:14px}
+.meter{height:6px;background:#e5ecf6;border-radius:8px;overflow:hidden;margin-bottom:4px}.meter i{display:block;height:100%;background:#dc683a}
+.speed{display:flex;justify-content:space-between;align-items:center;padding-top:7px;border-top:1px solid #e1e9f2}.speed strong{font-size:19px}
+.order{display:grid;grid-template-columns:41px 1fr auto;align-items:center;gap:11px;padding:15px 13px;border-top:1px solid #e4edf6}
+.item-icon,.plane-icon{display:grid;place-items:center;width:37px;height:37px;background:#eef4fd;color:#315783;border-radius:8px;font-size:22px}.order small,.flight small{display:block;color:#536882;font-size:12px}
+.tag{border-radius:999px;padding:4px 9px;font-weight:750;font-size:13px;white-space:nowrap;background:#e7edf6;color:#496079}.good{background:#d8f4e9;color:var(--success)}.bad{color:var(--failure)}
+.ticket{padding:16px 14px}.route{display:flex;justify-content:space-between;align-items:center;font-size:clamp(24px,4vw,37px);font-weight:800}
+.route span:first-child,.route span:last-child{min-width:72px}.route span:last-child{text-align:right}.route .plane-icon{font-size:18px}
+.flight{display:flex;justify-content:space-between;align-items:center;padding:12px 0 0;margin-top:10px;border-top:1px dashed #a1afc2;font-size:15px}
+.booking{padding:10px 14px;background:#eef4fc;font-size:14px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.controls{margin-top:13px}.controls input{flex:1;min-width:100px;accent-color:#a7dcff}
+.legend,details{color:var(--muted);font-size:13px;margin-top:9px;overflow-wrap:anywhere}details summary{cursor:pointer}details code{display:block}
+.capture main{margin-top:22px}.capture .tabs,.capture .controls,.capture details{display:none}.capture .dialogue{min-height:86px}
+@media(max-width:670px){main{width:calc(100% - 24px);margin-top:14px}.comparison{grid-template-columns:1fr}.timeline li{font-size:11px}.lane-top h2{font-size:16px}.desk{min-height:0}}
 </style>
 <main>
-<h1>同一道客服任务，两条轨迹</h1>
-<p>从同轮实测中挑选的三个案例。以关键步骤对齐，内容为轨迹摘要。</p>
+<div class="eyebrow" id="domain">τ²-BENCH</div>
+<h1 id="title"></h1>
+<p class="sub">同一任务 · 同一模拟用户 · 实测轨迹重建</p>
 <nav class="tabs" id="tabs" aria-label="选择业务域"></nav>
-<section class="case">
-<h2 id="title"></h2><p id="request"></p><p id="beat" aria-live="polite"></p>
-<div class="pair">
-<article><h3 class="failure">原始 Qwen3.5-2B</h3><div class="state" id="base-score"></div><code id="base-tool"></code><p id="base-text"></p></article>
-<article><h3 class="success">SFT＋GRPO＋静态手册</h3><div class="state" id="new-score"></div><code id="new-tool"></code><p id="new-text"></p></article>
-</div>
-<div class="control">
-<button id="prev" type="button">上一步</button><button id="play" type="button">播放</button><button id="next" type="button">下一步</button>
-<input id="seek" type="range" min="0" step="1" aria-label="关键步骤">
-</div>
+<ol class="timeline" id="timeline" aria-label="回放阶段"></ol>
+<section class="comparison" aria-label="原始模型与优化模型并排对照">
+  <article class="lane"><div class="lane-top"><h2>原始 Qwen3.5-2B</h2><span id="score0"></span></div><div id="dialogue0" class="dialogue"></div><div class="desk" id="desk0"></div></article>
+  <article class="lane"><div class="lane-top"><h2>SFT＋GRPO＋手册</h2><span id="score1"></span></div><div id="dialogue1" class="dialogue"></div><div class="desk" id="desk1"></div></article>
 </section>
-<details><summary>任务标识与轨迹索引</summary><p id="task"></p><p id="refs"></p><code id="hash0"></code><code id="hash1"></code></details>
+<div class="controls">
+ <button id="prev" type="button">上一步</button><button id="play" type="button">播放</button><button id="next" type="button">下一步</button>
+ <input id="seek" type="range" min="0" max="3" value="0" aria-label="跳转回放阶段">
+</div>
+<p class="legend" id="legend"></p>
+<details><summary>任务与轨迹索引</summary><p id="task"></p><p id="refs"></p><code id="hash0"></code><code id="hash1"></code></details>
 </main>
-<script id="case-data" type="application/json">[{"id": "telecom", "domain": "Telecom", "task": "[mobile_data_issue]airplane_mode_on|bad_network_preference|data_usage_exceeded|user_abroad_roaming_disabled_off[PERSONA:Easy]", "title": "恢复漫游中的移动数据", "en": "Restore mobile data while roaming", "request": "用户在境外，移动数据无法使用或很慢，希望恢复连接。", "steps": [62, 44], "hashes": ["80a627de4e1f44e6858a899df6519aead28b2b1a0b76b98a4f03c0566a29d956", "587e73acf3749b031b181b30b8657ae8abae8a24da8b96239afacad5058dce99"], "beats": [["1 · Locate the line", "先核对客户和线路", "get_details_by_id", "Checked the line and enabled carrier roaming.", "get_details_by_id", "Checked the line and enabled carrier roaming."], ["2 · Diagnose the blockers", "定位剩余限制", "run_speed_test", "Changed network settings; selected speed test still showed no connection.", "get_data_usage", "Checked the quota early: 15.1 GB used against a 15.0 GB limit."], ["3 · Change the state", "执行并复核", "get_data_usage", "Only checked usage near the end. The trace contains no data top-up.", "refuel_data", "Added 2 GB, corrected device settings, and verified 275 Mbps."], ["4 · Official outcome", "官方评分", "MAX_STEPS", "Reward 0. The trajectory reached its step limit without restoring service.", "USER_STOP", "Reward 1. Device speed test verified the recovered connection."]], "refs": ["Baseline: speed tests at messages 32, 46, 56; quota at 59.", "Optimized: quota at message 15; top-up at 23; speed test at 42."]}, {"id": "retail", "domain": "Retail", "task": "14", "title": "为两笔订单提交退货", "en": "Submit two returns", "request": "用户确认退回机械键盘和游戏鼠标，两件商品来自不同订单。", "steps": [16, 24], "hashes": ["2f52d2aeaf39d3391cef64d175bc3c843ba36b11a70f4fcd6ba7d305ee96b1dd", "0480658597ab05750547bb915c48b03f616500b0032f01cb922063cf61d93ed8"], "beats": [["1 · Verify identity", "验证用户", "find_user_id_by_email", "Located the customer account by email.", "find_user_id_by_email", "Located the customer account by email."], ["2 · Inspect the orders", "检查两笔订单", "get_order_details", "Checked both orders and identified the items to return.", "get_order_details", "Checked both orders and identified the items to return."], ["3 · Submit the returns", "获得确认后提交", "No write call", "The conversation ended after confirmation. No return tool ran.", "return_delivered_order_items", "Submitted a return for each order. Both tools returned 'return requested'."], ["4 · Official outcome", "官方评分", "0 return requests", "Reward 0. The two requested updates were missing.", "2 return requests", "Reward 1. Both order states recorded a return request."]], "refs": ["Baseline: order lookups at messages 9 and 11; no return call in the complete trace.", "Optimized: return tool calls at messages 19 and 21; both returned status 'return requested'."]}, {"id": "airline", "domain": "Airline", "task": "8", "title": "找到历史航班并完成订票", "en": "Find and rebook a past flight", "request": "用户希望订购同一条航线、与历史行程相同的航班，供两位乘客出行。", "steps": [20, 26], "hashes": ["8f10a4d07c2707af77da6af41efbab44fc36584000355d4609a20695fe74ab9c", "f1c59058b149a96d64bca2752165b0bed9717e139e5a44ff894f9dc03b2b54a6"], "beats": [["1 · Identify the customer", "识别用户", "get_user_details", "Retrieved the customer's account.", "get_user_details", "Retrieved the customer's account."], ["2 · Find the past flight", "找到历史航班", "search_direct_flight", "Repeated flight searches without opening the prior reservations.", "get_reservation_details", "Opened historical reservations and identified the matching flight."], ["3 · Create the booking", "提交预订", "No booking call", "The simulator requested a human handoff. No booking was written.", "book_reservation", "Created the matching one-way booking for two passengers."], ["4 · Official outcome", "官方评分", "0 bookings", "Reward 0. No matching booking was created.", "1 matching booking", "Reward 1. The simulator confirmed the booking."]], "refs": ["Baseline: searches at messages 5, 7, 11 and 13; no booking call in the complete trace.", "Optimized: reservation reads at messages 7–15 and booking at message 23; tool result contained two passengers."]}]</script>
+<script id="replay-data" type="application/json">{"cases": [{"id": "telecom", "domain": "Telecom", "task": "[mobile_data_issue]airplane_mode_on|bad_network_preference|data_usage_exceeded|user_abroad_roaming_disabled_off[PERSONA:Easy]", "title": "恢复漫游中的移动数据", "en": "Restore mobile data while roaming", "request": "用户在境外，移动数据无法使用或很慢，希望恢复连接。", "steps": [62, 44], "hashes": ["80a627de4e1f44e6858a899df6519aead28b2b1a0b76b98a4f03c0566a29d956", "587e73acf3749b031b181b30b8657ae8abae8a24da8b96239afacad5058dce99"], "beats": [["1 · Locate the line", "先核对客户和线路", "get_details_by_id", "Checked the line and enabled carrier roaming.", "get_details_by_id", "Checked the line and enabled carrier roaming."], ["2 · Diagnose the blockers", "定位剩余限制", "run_speed_test", "Changed network settings; selected speed test still showed no connection.", "get_data_usage", "Checked the quota early: 15.1 GB used against a 15.0 GB limit."], ["3 · Change the state", "执行并复核", "get_data_usage", "Only checked usage near the end. The trace contains no data top-up.", "refuel_data", "Added 2 GB, corrected device settings, and verified 275 Mbps."], ["4 · Official outcome", "官方评分", "MAX_STEPS", "Reward 0. The trajectory reached its step limit without restoring service.", "USER_STOP", "Reward 1. Device speed test verified the recovered connection."]], "refs": ["Baseline: speed tests at messages 32, 46, 56; quota at 59.", "Optimized: quota at message 15; top-up at 23; speed test at 42."]}, {"id": "retail", "domain": "Retail", "task": "14", "title": "为两笔订单提交退货", "en": "Submit two returns", "request": "用户确认退回机械键盘和游戏鼠标，两件商品来自不同订单。", "steps": [16, 24], "hashes": ["2f52d2aeaf39d3391cef64d175bc3c843ba36b11a70f4fcd6ba7d305ee96b1dd", "0480658597ab05750547bb915c48b03f616500b0032f01cb922063cf61d93ed8"], "beats": [["1 · Verify identity", "验证用户", "find_user_id_by_email", "Located the customer account by email.", "find_user_id_by_email", "Located the customer account by email."], ["2 · Inspect the orders", "检查两笔订单", "get_order_details", "Checked both orders and identified the items to return.", "get_order_details", "Checked both orders and identified the items to return."], ["3 · Submit the returns", "获得确认后提交", "No write call", "The conversation ended after confirmation. No return tool ran.", "return_delivered_order_items", "Submitted a return for each order. Both tools returned 'return requested'."], ["4 · Official outcome", "官方评分", "0 return requests", "Reward 0. The two requested updates were missing.", "2 return requests", "Reward 1. Both order states recorded a return request."]], "refs": ["Baseline: order lookups at messages 9 and 11; no return call in the complete trace.", "Optimized: return tool calls at messages 19 and 21; both returned status 'return requested'."]}, {"id": "airline", "domain": "Airline", "task": "8", "title": "找到历史航班并完成订票", "en": "Find and rebook a past flight", "request": "用户希望订购同一条航线、与历史行程相同的航班，供两位乘客出行。", "steps": [20, 26], "hashes": ["8f10a4d07c2707af77da6af41efbab44fc36584000355d4609a20695fe74ab9c", "f1c59058b149a96d64bca2752165b0bed9717e139e5a44ff894f9dc03b2b54a6"], "beats": [["1 · Identify the customer", "识别用户", "get_user_details", "Retrieved the customer's account.", "get_user_details", "Retrieved the customer's account."], ["2 · Find the past flight", "找到历史航班", "search_direct_flight", "Repeated flight searches without opening the prior reservations.", "get_reservation_details", "Opened historical reservations and identified the matching flight."], ["3 · Create the booking", "提交预订", "No booking call", "The simulator requested a human handoff. No booking was written.", "book_reservation", "Created the matching one-way booking for two passengers."], ["4 · Official outcome", "官方评分", "0 bookings", "Reward 0. No matching booking was created.", "1 matching booking", "Reward 1. The simulator confirmed the booking."]], "refs": ["Baseline: searches at messages 5, 7, 11 and 13; no booking call in the complete trace.", "Optimized: reservation reads at messages 7–15 and booking at message 23; tool result contained two passengers."]}], "scenes": {"telecom": {"title": "手机从断网到 275 Mbps", "timeline": ["用户报告境外断网", "排查设备与流量", "处理流量限制", "验证网络恢复"], "lanes": [[["我的手机在国外连不上移动网络。", "读取客户和线路", "未连接", "未检查", "未补充", "—"], ["我改过网络设置，还是没有网。", "调整设置后测速", "未连接", "未检查", "未补充", "测速失败"], ["设置都试过了，还是连不上。", "到后段才查套餐", "未连接", "15.1 / 15.0 GB", "未补充", "测速失败"], ["连接仍然没有恢复。", "达到步数上限", "未连接", "15.1 / 15.0 GB", "未补充", "测速失败"]], [["我的手机在国外连不上移动网络。", "读取客户和线路", "未连接", "未检查", "未补充", "—"], ["那现在是什么挡住了联网？", "提前检查套餐流量", "未连接", "15.1 / 15.0 GB", "未补充", "—"], ["同意补充 2 GB 流量。", "写入 2 GB 流量并调整设备", "待验证", "15.1 / 15.0 GB¹", "+2 GB", "等待测速"], ["已恢复，可继续使用移动数据。", "测速确认恢复", "已联网", "15.1 / 15.0 GB¹", "+2 GB", "275 Mbps"]]], "legend": "¹ 流量读数为补充前的套餐快照。"}, "retail": {"title": "聊天确认之后，订单真的退了吗？", "timeline": ["用户提出退货", "定位两笔订单", "确认后执行写操作", "检查最终订单状态"], "lanes": [[["我想退掉键盘和鼠标。", "按邮箱查找用户", "未提交", "未提交"], ["这两件商品来自不同订单。", "读取两笔订单详情", "未提交", "未提交"], ["我确认退货，请帮我提交。", "对话结束，未调用退货工具", "未提交", "未提交"], ["结束时，两笔订单都没有退货记录。", "官方检查未发现退货写入", "未提交", "未提交"]], [["我想退掉键盘和鼠标。", "按邮箱查找用户", "未提交", "未提交"], ["这两件商品来自不同订单。", "读取两笔订单详情", "未提交", "未提交"], ["我确认退货，请帮我提交。", "分别提交两笔退货", "退货已申请", "退货已申请"], ["两笔退货申请均已受理。", "工具返回两个 return requested", "退货已申请", "退货已申请"]]], "legend": "已申请表示退货请求写入订单，退款尚未发生。"}, "airline": {"title": "查到历史航班，再写入新预订", "timeline": ["用户提出复订需求", "查找原航班", "提交或结束对话", "检查行程是否创建"], "lanes": [[["想给两位乘客订上次坐过的那班。", "查询用户资料", "—", "尚未创建"], ["我要的是上次那一班。", "重复搜索新日期航班", "—", "尚未创建"], ["找不到旧航班，请转人工。", "没有提交预订", "—", "尚未创建"], ["没有写入符合要求的行程。", "官方检查未发现匹配预订", "—", "尚未创建"]], [["想给两位乘客订上次坐过的那班。", "查询用户资料", "—", "尚未创建"], ["我要的是上次那一班。", "打开历史预订，识别 HAT271", "HAT271", "尚未创建"], ["确认给两位乘客订这班。", "提交匹配的单程预订", "HAT271", "已创建 · 2 位"], ["匹配的单程行程已经写入。", "预订返回匹配航班和两位乘客", "HAT271", "已创建 · 2 位"]]], "legend": "航线和航班号来自任务轨迹，乘客及付款标识已省略。"}}}</script>
 <script>
-const cases=JSON.parse(document.getElementById('case-data').textContent);
-const byId=id=>document.getElementById(id);
-let index=0,step=0,timer=null;
-const tabs=cases.map((item,i)=>{
-  const tab=document.createElement('button');
-  tab.type='button';tab.textContent=item.domain;
-  tab.onclick=()=>{stop();index=i;step=0;render();};
-  byId('tabs').append(tab);return tab;
+const {cases,scenes}=JSON.parse(document.getElementById("replay-data").textContent);
+const $=id=>document.getElementById(id);
+const query=new URLSearchParams(location.search);
+let index=Math.max(0,cases.findIndex(c=>c.id===query.get("case")));
+let stage=Math.min(3,Math.max(0,Number.parseInt(query.get("step"),10)||0)),timer=null;
+if(query.get("capture")==="1")document.body.classList.add("capture");
+function el(tag,text,cls){
+ const node=document.createElement(tag);
+ if(text!==undefined)node.textContent=text;
+ if(cls)node.className=cls;
+ return node;
+}
+function append(node,...children){node.append(...children);return node;}
+const tabs=cases.map((c,i)=>{
+ const button=el("button",c.domain);
+ button.type="button";button.onclick=()=>{stop();index=i;stage=0;render();};$("tabs").append(button);return button;
 });
-function put(id,value){byId(id).textContent=value;}
-function stop(){clearInterval(timer);timer=null;put('play','播放');}
+function badge(text,ok){return el("span",text,"tag"+(ok?" good":""));}
+function row(name,value){return append(el("div",undefined,"row"),el("span",name),el("strong",value));}
+function mobile([status,usage,topup,speed]){
+ const bar=append(el("div",undefined,"bars"),...Array.from({length:4},()=>el("i")));
+ bar.setAttribute("aria-hidden","true");
+ const connected=status==="已联网";
+ const header=append(el("div",undefined,"network"+(connected?" online":"")),el("strong",status,connected?"":"bad"),bar);
+ const meter=append(el("div",undefined,"meter"),el("i"));
+ if(usage==="未检查")meter.firstChild.style.width="0";
+ const speedMeter=append(el("div",undefined,"speed"),el("span","测速"),el("strong",speed,speed==="测速失败"?"bad":""));
+ const inside=append(el("div",undefined,"phone-body"),header,row("套餐流量",usage),meter,row("补充流量",topup),speedMeter);
+ return append(el("div",undefined,"surface phone"),el("h3","手机 · 移动网络"),inside);
+}
+function orders(states){
+ const board=append(el("div",undefined,"surface"),el("h3","订单后台 · 退货状态"));
+ [["⌨","机械键盘"],["◉","游戏鼠标"]].forEach(([icon,name],i)=>{
+  const desc=append(el("div"),el("strong",name),el("small","订单 "+(i?"B":"A")));
+  board.append(append(el("div",undefined,"order"),el("span",icon,"item-icon"),desc,badge(states[i],states[i]!=="未提交")));
+ });
+ return board;
+}
+function itinerary([flight,status]){
+ const route=append(el("div",undefined,"route"),el("span","ORD"),el("span","✈","plane-icon"),el("span","PHL"));
+ const ticket=append(el("div",undefined,"ticket"),route,append(el("div",undefined,"flight"),el("span","匹配的历史航班"),el("strong",flight)));
+ return append(el("div",undefined,"surface"),el("h3","预订后台 · 单程行程"),ticket,
+  append(el("div",undefined,"booking"),el("span","新预订"),badge(status,status!=="尚未创建")));
+}
+const renderer={telecom:mobile,retail:orders,airline:itinerary};
 function render(){
-  const item=cases[index], max=item.beats.length-1;
-  const [heading,label,baseTool,baseText,newTool,newText]=item.beats[step];
-  tabs.forEach((tab,i)=>tab.setAttribute('aria-pressed',String(i===index)));
-  put('title',item.title);put('request',item.request);put('beat',(step+1)+' / '+(max+1)+' · '+label);
-  put('base-score','官方评分 0 · '+item.steps[0]+' 步');
-  put('new-score','官方评分 1 · '+item.steps[1]+' 步');
-  put('base-tool',baseTool);put('base-text',baseText);put('new-tool',newTool);put('new-text',newText);
-  byId('seek').max=max;byId('seek').value=step;
-  byId('prev').disabled=step===0;byId('next').disabled=step===max;
-  put('task','官方任务 ID：'+item.task);put('refs',item.refs.join(' '));
-  put('hash0','原始轨迹 SHA-256 '+item.hashes[0]);put('hash1','优化轨迹 SHA-256 '+item.hashes[1]);
+ const item=cases[index],scene=scenes[item.id];
+ $("domain").textContent="τ²-BENCH  /  "+item.domain.toUpperCase();
+ $("title").textContent=scene.title;
+ tabs.forEach((button,i)=>button.setAttribute("aria-pressed",String(i===index)));
+ $("timeline").replaceChildren(...scene.timeline.map((label,i)=>{
+  const node=el("li",(i+1)+" · "+label);
+  if(i===stage)node.setAttribute("aria-current","step");
+  return node;
+ }));
+ for(let lane=0;lane<2;lane++){
+  const [quote,action,...state]=scene.lanes[lane][stage];
+  const tool=item.beats[stage][lane?4:2];
+  $("dialogue"+lane).replaceChildren(el("div",quote,"quote"),
+   append(el("div",undefined,"action"),el("span",action+" · "),el("code",tool)));
+  $("desk"+lane).replaceChildren(renderer[item.id](state));
+  const score=$("score"+lane);
+  score.className=stage<3?"":lane?"passed":"failed";
+  score.textContent=stage<3?"回放中":lane?"通过 · 1 分":"未通过 · 0 分";
+  $("hash"+lane).textContent=(lane?"优化":"原始")+"轨迹 SHA-256 "+item.hashes[lane];
+ }
+ $("legend").textContent=scene.legend+" 对话为摘要，界面为状态重建。";
+ $("task").textContent="官方任务 ID："+item.task;$("refs").textContent=item.refs.join(" ");
+ $("seek").value=stage;$("prev").disabled=stage===0;$("next").disabled=stage===3;
 }
-function move(delta){
-  step=Math.max(0,Math.min(cases[index].beats.length-1,step+delta));render();
-}
-byId('prev').onclick=()=>{stop();move(-1);};
-byId('next').onclick=()=>{stop();move(1);};
-byId('seek').oninput=event=>{stop();step=Number(event.target.value);render();};
-byId('play').onclick=()=>{
-  if(timer){stop();return;}
-  if(step===cases[index].beats.length-1){step=0;render();}
-  put('play','暂停');
-  timer=setInterval(()=>{move(1);if(step===cases[index].beats.length-1)stop();},2200);
+function stop(){clearInterval(timer);timer=null;$("play").textContent="播放";}
+function move(delta){stage=Math.max(0,Math.min(3,stage+delta));render();}
+$("prev").onclick=()=>{stop();move(-1);};$("next").onclick=()=>{stop();move(1);};
+$("seek").oninput=event=>{stop();stage=Number(event.target.value);render();};
+$("play").onclick=()=>{
+ if(timer){stop();return;}
+ if(stage===3){stage=0;render();}
+ $("play").textContent="暂停";
+ timer=setInterval(()=>{move(1);if(stage===3)stop();},2400);
 };
 render();
 </script>

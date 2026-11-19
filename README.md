@@ -2,9 +2,9 @@
 
 将 Qwen3.5-2B 用于 [τ²-bench](https://github.com/sierra-research/tau2-bench) 的电信、零售和航空多轮工具调用任务。项目使用通过官方评分的教师轨迹做 SFT 冷启动，在 VeRL 中做 GRPO 后训练，并在系统提示中加入分域静态业务手册。下面三组展示的是相同任务上原始模型失败、优化方案成功的实际轨迹。
 
-[交互回放 HTML](demos/index.html) · [逐段证据与轨迹哈希](data/cases.json) · [完整两组评测汇总](data/metrics.json)
+[交互工作台 HTML](demos/index.html) · [逐段证据与轨迹哈希](data/cases.json) · [完整两组评测汇总](data/metrics.json)
 
-GitHub 会直接展示下面的 GIF。要切换步骤或暂停，下载 HTML 后用浏览器打开即可。也可单独下载各段 MP4。
+回放用左右并排的工作台重建原始与优化方案的关键状态：手机联网与测速、两笔订单的退货状态、航空行程是否写入。画面基于工具调用和返回结果，客服对话以摘要呈现。下方 GIF 可直接观看。下载 HTML 后可以切换业务、暂停和逐步查看。
 
 ## 三组失败与成功对照
 
@@ -51,11 +51,11 @@ GitHub 会直接展示下面的 GIF。要切换步骤或暂停，下载 HTML 后
 
 ## 本地运行
 
-从仓库打开 `demos/index.html` 可离线浏览。修改案例后可以重新生成 GIF 和回放 HTML。生成 MP4 时传入 FFmpeg 路径。
+下载 `demos/index.html` 后用浏览器打开，即可离线浏览。脚本默认更新 HTML。传入 Chromium 系浏览器和 FFmpeg 的路径，可以从同一页面重新导出 PNG、GIF 和 MP4。
 
 ```sh
 python -m pip install Pillow
-python tools/build_demos.py --ffmpeg ffmpeg
+python tools/build_demos.py --browser /path/to/chromium --ffmpeg ffmpeg
 ```
 
 [训练与评测说明](docs/evaluation.md) · [MERA-Evolve](https://github.com/yh-yao/MERA-Evolve) · [KnowWhenToHandOff](https://github.com/JaspinXu/KnowWhenToHandOff)

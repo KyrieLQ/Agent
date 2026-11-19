@@ -1,96 +1,80 @@
-"""Build offline replay plus GIF and optional MP4 files from reviewed evidence."""
+"""Render the same product replay UI to offline HTML, GIF, PNG, and MP4."""
 import argparse
 import json
 from pathlib import Path
 import shutil
 import subprocess
 from tempfile import TemporaryDirectory
+import time
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image
 
 
 ROOT = Path(__file__).resolve().parents[1]
-WIDTH, HEIGHT = 1120, 580
+WIDTH, HEIGHT = 1280, 700
+HOLDS = (2, 3, 4, 4)
 
 
-def font(size, bold=False, mono=False):
-    for name in (
-        ("C:/Windows/Fonts/consola.ttf" if mono else
-         "C:/Windows/Fonts/arialbd.ttf" if bold else "C:/Windows/Fonts/arial.ttf"),
-        "DejaVuSansMono.ttf" if mono else "DejaVuSans-Bold.ttf" if bold else "DejaVuSans.ttf",
-    ):
-        try:
-            return ImageFont.truetype(name, size)
-        except OSError:
-            pass
-    raise SystemExit("Install Arial or DejaVu Sans to render the replay.")
+def screenshot(browser, url, output, profile):
+    command = [
+        browser, "--headless=new", "--disable-background-networking",
+        "--no-first-run", "--disable-gpu", "--hide-scrollbars",
+        f"--user-data-dir={profile}", f"--window-size={WIDTH},{HEIGHT}",
+        "--force-device-scale-factor=1", f"--screenshot={output}", url,
+    ]
+    subprocess.run(command, check=True, stdout=subprocess.DEVNULL,
+                   stderr=subprocess.DEVNULL, timeout=45)
+    deadline = time.monotonic() + 12
+    while not output.is_file() and time.monotonic() < deadline:
+        time.sleep(0.15)
+    with Image.open(output) as frame:
+        if frame.size != (WIDTH, HEIGHT):
+            raise ValueError(f"Unexpected screenshot dimensions: {frame.size}")
+        return frame.convert("RGB")
 
 
-def wrapped(draw, value, x, y, limit, face, color, line_height):
-    line = ""
-    for word in value.split():
-        candidate = f"{line} {word}".strip()
-        if line and draw.textlength(candidate, font=face) > limit:
-            draw.text((x, y), line, font=face, fill=color)
-            line, y = word, y + line_height
-        else:
-            line = candidate
-    if line:
-        draw.text((x, y), line, font=face, fill=color)
-
-
-def render(case, index):
-    name, _, *details = case["beats"][index]
-    image = Image.new("RGB", (WIDTH, HEIGHT), "#0a1220")
-    canvas = ImageDraw.Draw(image)
-    canvas.text((36, 30), f"τ²-BENCH   /   {case['domain'].upper()}", font=font(20, bold=True), fill="#a7dcff")
-    canvas.text((36, 66), case["en"], font=font(41, bold=True), fill="#eef4ff")
-    canvas.text((36, 131), name, font=font(25, bold=True), fill="#b9cbe3")
-    for column, label in enumerate(("Original Qwen3.5-2B", "SFT + GRPO + static playbooks")):
-        left = 36 + 532 * column
-        accent = ("#ffb3a7", "#9cebd3")[column]
-        tool, note = details[2 * column:2 * column + 2]
-        canvas.rounded_rectangle((left, 190, left + 516, 473), radius=15, fill="#142238", outline="#465a73", width=2)
-        canvas.text((left + 20, 213), label, font=font(27, bold=True), fill=accent)
-        result = ("FAIL · Reward 0", "PASS · Reward 1")[column]
-        canvas.text((left + 20, 254), f"{result} · {case['steps'][column]} steps", font=font(19), fill="#b9cbe3")
-        canvas.text((left + 20, 306), tool, font=font(19, mono=True), fill="#a7dcff")
-        wrapped(canvas, note, left + 20, 349, 472, font(23), "#eef4ff", 30)
-    for i in range(len(case["beats"])):
-        x = 36 + i * 74
-        canvas.rounded_rectangle((x, 510, x + 62, 517), radius=3, fill="#a7dcff" if i == index else "#3a4d65")
-    canvas.text((36, 532), "Abridged trace replay · Matched task, simulator and scoring", font=font(17), fill="#9cafc4")
-    return image
+def render_media(case_id, dest, browser, ffmpeg):
+    with TemporaryDirectory() as tmp:
+        folder = Path(tmp)
+        frames = [
+            screenshot(browser, f"{(dest / 'index.html').as_uri()}?capture=1&case={case_id}&step={index}",
+                       folder / f"shot-{index}.png", folder / "profile")
+            for index in range(4)
+        ]
+        frames[-1].save(dest / f"{case_id}.png", optimize=True)
+        palette = [frame.quantize(colors=150) for frame in frames]
+        palette[0].save(dest / f"{case_id}.gif", save_all=True, append_images=palette[1:],
+                        duration=[s * 1000 for s in HOLDS], loop=0, disposal=2)
+        if ffmpeg:
+            number = 0
+            for frame, seconds in zip(frames, HOLDS):
+                for _ in range(seconds):
+                    frame.save(folder / f"{number:03}.png")
+                    number += 1
+            subprocess.run([ffmpeg, "-v", "error", "-y", "-framerate", "1",
+                "-i", str(folder / "%03d.png"), "-c:v", "libx264", "-r", "24",
+                "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(dest / f"{case_id}.mp4")],
+                check=True, timeout=60)
 
 
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument("--browser", help="Path to Chrome, Edge, or Chromium for image/video export")
     parser.add_argument("--ffmpeg", default=shutil.which("ffmpeg"))
     args = parser.parse_args()
     cases = json.loads((ROOT / "data/cases.json").read_text(encoding="utf-8"))
+    scenes = json.loads((ROOT / "data/product-replay.json").read_text(encoding="utf-8"))
+    if {case["id"] for case in cases} != scenes.keys():
+        raise ValueError("Every case needs a matching product view")
     dest = ROOT / "demos"
     dest.mkdir(exist_ok=True)
-    template = (ROOT / "tools/replay.template.html").read_text(encoding="utf-8")
-    embedded = json.dumps(cases, ensure_ascii=False).replace("<", "\\u003c")
-    (dest / "index.html").write_text(template.replace("__CASES__", embedded), encoding="utf-8")
-    for case in cases:
-        frames = [render(case, index) for index in range(len(case["beats"]))]
-        frames[-1].save(dest / f"{case['id']}.png", optimize=True)
-        palette = [frame.quantize(colors=128) for frame in frames]
-        palette[0].save(dest / f"{case['id']}.gif", save_all=True, append_images=palette[1:],
-                        duration=[2100, 2800, 3400, 3700], loop=0, disposal=2)
-        if args.ffmpeg:
-            with TemporaryDirectory() as tmp:
-                folder = Path(tmp)
-                index = 0
-                for frame, seconds in zip(frames, (2, 3, 4, 4)):
-                    for _ in range(seconds):
-                        frame.save(folder / f"{index:03}.png")
-                        index += 1
-                subprocess.run([args.ffmpeg, "-v", "error", "-y", "-framerate", "1",
-                    "-i", str(folder / "%03d.png"), "-c:v", "libx264", "-r", "24",
-                    "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(dest / f"{case['id']}.mp4")],
-                    check=True)
+    template = (ROOT / "tools/product.template.html").read_text(encoding="utf-8")
+    data = json.dumps(dict(cases=cases, scenes=scenes), ensure_ascii=False).replace("<", "\\u003c")
+    (dest / "index.html").write_text(template.replace("__REPLAY_DATA__", data), encoding="utf-8")
+    if args.browser:
+        for case in cases:
+            render_media(case["id"], dest, args.browser, args.ffmpeg)
+            print(f"Rendered {case['domain']} comparison replay.")
 
 
 if __name__ == "__main__":

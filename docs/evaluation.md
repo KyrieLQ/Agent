@@ -28,3 +28,5 @@
 - [KnowWhenToHandOff](https://github.com/JaspinXu/KnowWhenToHandOff) 是项目早期的工程参考。
 
 本仓库公开项目说明、静态业务手册、汇总指标、案例摘要和回放生成器。复现模型训练需准备上游代码及训练环境。
+
+工作台回放由 `data/cases.json` 和 `data/product-replay.json` 生成。手机、订单和行程界面是工具日志的状态重建。四个阶段按业务步骤对齐，对话为摘要，阶段间隔用于阅读。
