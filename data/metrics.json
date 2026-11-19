@@ -1,0 +1,38 @@
+{
+  "run": "direct-201-2026-11-18",
+  "seed": 300,
+  "scope": "201 fixed held-out τ²-bench tasks",
+  "completed": [
+    "base_off",
+    "grpo_on"
+  ],
+  "domain_order": [
+    "telecom",
+    "retail",
+    "airline"
+  ],
+  "totals": [
+    122,
+    63,
+    16
+  ],
+  "base": [
+    46,
+    33,
+    7
+  ],
+  "optimized": [
+    48,
+    36,
+    7
+  ],
+  "paired": {
+    "gains": 24,
+    "losses": 19
+  },
+  "per_case_source": "Selected from paired gains; messages are abridged and identifying fields omitted.",
+  "notes": [
+    "Both complete arms use the same task manifest, 27B GPTQ INT4 simulator, and greedy decoding.",
+    "The run was stopped at the user's request before the two additional control arms finished. The score comparison is a single run."
+  ]
+}

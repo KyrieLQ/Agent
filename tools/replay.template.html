@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>τ²-bench · 同题轨迹回放</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0a1220;color:#eef4ff;font:16px/1.6 system-ui,sans-serif}
+main{width:min(1100px,calc(100% - 32px));margin:36px auto 52px}
+h1{font-size:clamp(28px,5vw,46px);line-height:1.15;margin:10px 0 15px}
+p{margin:8px 0;color:#b8c7dd}.tabs,.control{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+button{font:inherit;padding:9px 15px;background:#17283e;color:#eef4ff;border:1px solid #4a617c;border-radius:9px;cursor:pointer}
+button[aria-pressed=true]{background:#a7dcff;color:#0a1220;border-color:#a7dcff;font-weight:700}button:disabled{opacity:.45;cursor:default}
+button:focus-visible,input:focus-visible{outline:3px solid #a7dcff;outline-offset:3px}
+.case{margin-top:23px;background:#101c2e;border:1px solid #30445d;border-radius:17px;padding:20px}
+h2,h3{margin:0}.pair{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0}
+article{min-height:180px;padding:17px;border:1px solid #415670;border-radius:12px;background:#142238}
+.failure{color:#ffb3a7}.success{color:#9cebd3}.state{font-size:14px;color:#b8c7dd}
+code{display:inline-block;overflow-wrap:anywhere;color:#a7dcff;margin-top:10px}.control input{flex:1;min-width:100px;accent-color:#a7dcff}
+summary{cursor:pointer}details code{display:block;font-size:12px}
+@media(max-width:620px){main{margin-top:20px}.pair{grid-template-columns:1fr}article{min-height:0}}
+</style>
+<main>
+<h1>同一道客服任务，两条轨迹</h1>
+<p>从同轮实测中挑选的三个案例。以关键步骤对齐，内容为轨迹摘要。</p>
+<nav class="tabs" id="tabs" aria-label="选择业务域"></nav>
+<section class="case">
+<h2 id="title"></h2><p id="request"></p><p id="beat" aria-live="polite"></p>
+<div class="pair">
+<article><h3 class="failure">原始 Qwen3.5-2B</h3><div class="state" id="base-score"></div><code id="base-tool"></code><p id="base-text"></p></article>
+<article><h3 class="success">SFT＋GRPO＋静态手册</h3><div class="state" id="new-score"></div><code id="new-tool"></code><p id="new-text"></p></article>
+</div>
+<div class="control">
+<button id="prev" type="button">上一步</button><button id="play" type="button">播放</button><button id="next" type="button">下一步</button>
+<input id="seek" type="range" min="0" step="1" aria-label="关键步骤">
+</div>
+</section>
+<details><summary>任务标识与轨迹索引</summary><p id="task"></p><p id="refs"></p><code id="hash0"></code><code id="hash1"></code></details>
+</main>
+<script id="case-data" type="application/json">__CASES__</script>
+<script>
+const cases=JSON.parse(document.getElementById('case-data').textContent);
+const byId=id=>document.getElementById(id);
+let index=0,step=0,timer=null;
+const tabs=cases.map((item,i)=>{
+  const tab=document.createElement('button');
+  tab.type='button';tab.textContent=item.domain;
+  tab.onclick=()=>{stop();index=i;step=0;render();};
+  byId('tabs').append(tab);return tab;
+});
+function put(id,value){byId(id).textContent=value;}
+function stop(){clearInterval(timer);timer=null;put('play','播放');}
+function render(){
+  const item=cases[index], max=item.beats.length-1;
+  const [heading,label,baseTool,baseText,newTool,newText]=item.beats[step];
+  tabs.forEach((tab,i)=>tab.setAttribute('aria-pressed',String(i===index)));
+  put('title',item.title);put('request',item.request);put('beat',(step+1)+' / '+(max+1)+' · '+label);
+  put('base-score','官方评分 0 · '+item.steps[0]+' 步');
+  put('new-score','官方评分 1 · '+item.steps[1]+' 步');
+  put('base-tool',baseTool);put('base-text',baseText);put('new-tool',newTool);put('new-text',newText);
+  byId('seek').max=max;byId('seek').value=step;
+  byId('prev').disabled=step===0;byId('next').disabled=step===max;
+  put('task','官方任务 ID：'+item.task);put('refs',item.refs.join(' '));
+  put('hash0','原始轨迹 SHA-256 '+item.hashes[0]);put('hash1','优化轨迹 SHA-256 '+item.hashes[1]);
+}
+function move(delta){
+  step=Math.max(0,Math.min(cases[index].beats.length-1,step+delta));render();
+}
+byId('prev').onclick=()=>{stop();move(-1);};
+byId('next').onclick=()=>{stop();move(1);};
+byId('seek').oninput=event=>{stop();step=Number(event.target.value);render();};
+byId('play').onclick=()=>{
+  if(timer){stop();return;}
+  if(step===cases[index].beats.length-1){step=0;render();}
+  put('play','暂停');
+  timer=setInterval(()=>{move(1);if(step===cases[index].beats.length-1)stop();},2200);
+};
+render();
+</script>
+</html>

@@ -1,0 +1,164 @@
+[
+  {
+    "id": "telecom",
+    "domain": "Telecom",
+    "task": "[mobile_data_issue]airplane_mode_on|bad_network_preference|data_usage_exceeded|user_abroad_roaming_disabled_off[PERSONA:Easy]",
+    "title": "恢复漫游中的移动数据",
+    "en": "Restore mobile data while roaming",
+    "request": "用户在境外，移动数据无法使用或很慢，希望恢复连接。",
+    "steps": [
+      62,
+      44
+    ],
+    "hashes": [
+      "80a627de4e1f44e6858a899df6519aead28b2b1a0b76b98a4f03c0566a29d956",
+      "587e73acf3749b031b181b30b8657ae8abae8a24da8b96239afacad5058dce99"
+    ],
+    "beats": [
+      [
+        "1 · Locate the line",
+        "先核对客户和线路",
+        "get_details_by_id",
+        "Checked the line and enabled carrier roaming.",
+        "get_details_by_id",
+        "Checked the line and enabled carrier roaming."
+      ],
+      [
+        "2 · Diagnose the blockers",
+        "定位剩余限制",
+        "run_speed_test",
+        "Changed network settings; selected speed test still showed no connection.",
+        "get_data_usage",
+        "Checked the quota early: 15.1 GB used against a 15.0 GB limit."
+      ],
+      [
+        "3 · Change the state",
+        "执行并复核",
+        "get_data_usage",
+        "Only checked usage near the end. The trace contains no data top-up.",
+        "refuel_data",
+        "Added 2 GB, corrected device settings, and verified 275 Mbps."
+      ],
+      [
+        "4 · Official outcome",
+        "官方评分",
+        "MAX_STEPS",
+        "Reward 0. The trajectory reached its step limit without restoring service.",
+        "USER_STOP",
+        "Reward 1. Device speed test verified the recovered connection."
+      ]
+    ],
+    "refs": [
+      "Baseline: speed tests at messages 32, 46, 56; quota at 59.",
+      "Optimized: quota at message 15; top-up at 23; speed test at 42."
+    ]
+  },
+  {
+    "id": "retail",
+    "domain": "Retail",
+    "task": "14",
+    "title": "为两笔订单提交退货",
+    "en": "Submit two returns",
+    "request": "用户确认退回机械键盘和游戏鼠标，两件商品来自不同订单。",
+    "steps": [
+      16,
+      24
+    ],
+    "hashes": [
+      "2f52d2aeaf39d3391cef64d175bc3c843ba36b11a70f4fcd6ba7d305ee96b1dd",
+      "0480658597ab05750547bb915c48b03f616500b0032f01cb922063cf61d93ed8"
+    ],
+    "beats": [
+      [
+        "1 · Verify identity",
+        "验证用户",
+        "find_user_id_by_email",
+        "Located the customer account by email.",
+        "find_user_id_by_email",
+        "Located the customer account by email."
+      ],
+      [
+        "2 · Inspect the orders",
+        "检查两笔订单",
+        "get_order_details",
+        "Checked both orders and identified the items to return.",
+        "get_order_details",
+        "Checked both orders and identified the items to return."
+      ],
+      [
+        "3 · Submit the returns",
+        "获得确认后提交",
+        "No write call",
+        "The conversation ended after confirmation. No return tool ran.",
+        "return_delivered_order_items",
+        "Submitted a return for each order. Both tools returned 'return requested'."
+      ],
+      [
+        "4 · Official outcome",
+        "官方评分",
+        "0 return requests",
+        "Reward 0. The two requested updates were missing.",
+        "2 return requests",
+        "Reward 1. Both order states recorded a return request."
+      ]
+    ],
+    "refs": [
+      "Baseline: order lookups at messages 9 and 11; no return call in the complete trace.",
+      "Optimized: return tool calls at messages 19 and 21; both returned status 'return requested'."
+    ]
+  },
+  {
+    "id": "airline",
+    "domain": "Airline",
+    "task": "8",
+    "title": "找到历史航班并完成订票",
+    "en": "Find and rebook a past flight",
+    "request": "用户希望订购同一条航线、与历史行程相同的航班，供两位乘客出行。",
+    "steps": [
+      20,
+      26
+    ],
+    "hashes": [
+      "8f10a4d07c2707af77da6af41efbab44fc36584000355d4609a20695fe74ab9c",
+      "f1c59058b149a96d64bca2752165b0bed9717e139e5a44ff894f9dc03b2b54a6"
+    ],
+    "beats": [
+      [
+        "1 · Identify the customer",
+        "识别用户",
+        "get_user_details",
+        "Retrieved the customer's account.",
+        "get_user_details",
+        "Retrieved the customer's account."
+      ],
+      [
+        "2 · Find the past flight",
+        "找到历史航班",
+        "search_direct_flight",
+        "Repeated flight searches without opening the prior reservations.",
+        "get_reservation_details",
+        "Opened historical reservations and identified the matching flight."
+      ],
+      [
+        "3 · Create the booking",
+        "提交预订",
+        "No booking call",
+        "The simulator requested a human handoff. No booking was written.",
+        "book_reservation",
+        "Created the matching one-way booking for two passengers."
+      ],
+      [
+        "4 · Official outcome",
+        "官方评分",
+        "0 bookings",
+        "Reward 0. No matching booking was created.",
+        "1 matching booking",
+        "Reward 1. The simulator confirmed the booking."
+      ]
+    ],
+    "refs": [
+      "Baseline: searches at messages 5, 7, 11 and 13; no booking call in the complete trace.",
+      "Optimized: reservation reads at messages 7–15 and booking at message 23; tool result contained two passengers."
+    ]
+  }
+]

@@ -1,0 +1,7 @@
+Telecom troubleshooting checklist. Apply the official policy above.
+Identify the customer and affected line using information already given. Read the relevant line, bill, or plan state before a change.
+For no service, check airplane mode, SIM and line status. Handle overdue-bill suspension using the policy's bill and line sequence. Ask the customer to reboot after resuming the line or resetting APN. Follow the transfer policy when a fault requires a human.
+For mobile data, distinguish no signal from no or slow data. Work from observed mobile data, roaming, data usage, Data Saver, VPN, and network preference. When adding data, confirm amount and price.
+For MMS, verify data connectivity and then check the relevant APN, network mode, Wi-Fi calling or app permissions; retest sending an actual MMS after a change.
+Device checks or actions belong to the customer. Ask for one concrete check or correction at a time, wait for their result, then retest the original symptom. Avoid repeating a successful change on unchanged evidence.
+When the customer confirms the original function works, ask once about any remaining concerns and close naturally. After a successful human transfer use the policy's exact transfer notice.
