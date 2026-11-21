@@ -9,6 +9,9 @@ fi
 role="$1"
 checkpoint="$2"
 vllm_bin="${VLLM_BIN:-vllm}"
+profile="${SERVING_PROFILE:-default}"
+runtime=(--no-enable-prefix-caching --no-async-scheduling --gdn-prefill-backend triton)
+max_seqs=1
 
 case "$role" in
     agent)
@@ -29,6 +32,21 @@ case "$role" in
         ;;
     *) echo "Unknown role: $role" >&2; exit 2 ;;
 esac
+case "$profile" in
+    default) ;;
+    4b)
+        runtime=(--enable-prefix-caching --gdn-prefill-backend flashinfer)
+        if [[ "$role" == agent ]]; then
+            memory="${AGENT_MEMORY_FRACTION:-0.90}"
+            length="${AGENT_CONTEXT:-32768}"
+            max_seqs=8
+            extra+=(--reasoning-parser qwen3 --disable-custom-all-reduce)
+        else
+            max_seqs=24
+        fi
+        ;;
+    *) echo "Unknown serving profile: $profile" >&2; exit 2 ;;
+esac
 if ! [[ "$cards" =~ ^[0-9]+(,[0-9]+)*$ ]]; then
     echo "GPU IDs must be comma-separated integers." >&2
     exit 2
@@ -43,6 +61,5 @@ exec "$vllm_bin" serve "$checkpoint" \
     --enable-auto-tool-choice --tool-call-parser qwen3_xml \
     --tensor-parallel-size "${#gpu_ids[@]}" \
     --gpu-memory-utilization "$memory" --max-model-len "$length" \
-    --max-num-seqs 1 --max-num-batched-tokens 4096 --enable-chunked-prefill \
-    --no-enable-prefix-caching --no-async-scheduling --enforce-eager \
-    --gdn-prefill-backend triton "${extra[@]}"
+    --max-num-seqs "${SERVE_MAX_SEQS:-$max_seqs}" --max-num-batched-tokens 4096 --enable-chunked-prefill \
+    --enforce-eager "${runtime[@]}" "${extra[@]}"

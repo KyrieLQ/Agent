@@ -61,4 +61,31 @@ MODEL_PATH="$BASE_CHECKPOINT" TRAIN_FILE="$GRPO_PARQUET" LORA_ADAPTER_PATH=/path
 bash deploy/serve.sh agent "$MERGED_CHECKPOINT"
 ```
 
-这里的训练入口覆盖 SFT 和普通 GRPO。DAPO 动态采样对照需要原训练环境中的 VeRL 组采样扩展。
+## 4. Qwen3.5-4B
+
+4B 的 SFT 和 GRPO 均使用两卡 FSDP。GRPO 将更新后的 LoRA 合入同步权重，通过 BF16 权重同步把训练策略传给独立的采样卡。训练入口会将两份 FSDP 分片导出为 PEFT adapter。
+
+```bash
+MODEL_PATH="$BASE_4B" SFT_DATA="$SFT_PARQUET" SFT_OUTPUT_DIR="$SFT_ADAPTER" \
+  SFT_GPU=0,1 bash training/train.sh sft-4b
+```
+
+在独立终端把 27B 模拟用户放在 GPU 3、4，给 GRPO 的训练和采样留出 GPU 0、1、2。
+
+```bash
+SERVING_PROFILE=4b SIM_GPUS=3,4 SERVE_MAX_SEQS=8 \
+  bash deploy/serve.sh simulator /path/to/simulator-checkpoint
+```
+
+```bash
+MODEL_PATH="$BASE_4B" TRAIN_FILE="$GRPO_PARQUET" LORA_ADAPTER_PATH="$SFT_ADAPTER" \
+  OUTPUT_DIR="$GRPO_OUTPUT" TRAIN_GPU=0,1 ROLLOUT_GPU=2 bash training/train.sh grpo-4b
+```
+
+训练环境中的 Qwen3.5 Triton 兼容目录通过 `QWEN35_TRAIN_TRITON_OVERLAY` 指定。GRPO 使用独立源码目录时，通过 `MERA_GRPO_ROOT` 指定。将 `$GRPO_OUTPUT/final_adapter_path.txt` 里的路径传给上面的合并命令，再启动 4B 客服并复用模拟用户服务。
+
+```bash
+SERVING_PROFILE=4b AGENT_GPUS=0 bash deploy/serve.sh agent "$MERGED_CHECKPOINT"
+python src/run_task.py retail "$TASK_ID" --with-playbook \
+  --agent-temperature 0.5 --agent-top-p 0.98 --out runs/retail.json
+```

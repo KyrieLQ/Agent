@@ -17,6 +17,7 @@ def build_parser():
     parser.add_argument("--agent-model", default="openai/evol-llm-agent")
     parser.add_argument("--user-model", default="openai/evol-llm-user")
     parser.add_argument("--agent-temperature", type=float, default=0.0)
+    parser.add_argument("--agent-top-p", type=float, default=1.0)
     parser.add_argument("--seed", type=int, default=300)
     parser.add_argument("--max-steps", type=int, default=60)
     parser.add_argument("--out", required=True, type=Path)
@@ -28,7 +29,7 @@ def run(args, benchmark):
         args.agent_model, args.agent_url, temperature=args.agent_temperature,
         enable_thinking=False, max_tokens=1024,
     )
-    agent.args.update(top_p=1.0, seed=args.seed)
+    agent.args.update(top_p=args.agent_top_p, seed=args.seed)
     user = benchmark.make_llm_spec(
         args.user_model, args.user_url, temperature=0.0,
         enable_thinking=False, max_tokens=768,
@@ -54,6 +55,8 @@ def main():
     args = build_parser().parse_args()
     if args.max_steps < 1 or args.agent_temperature < 0:
         raise SystemExit("max-steps must be positive and temperature non-negative")
+    if not 0.0 < args.agent_top_p <= 1.0:
+        raise SystemExit("agent-top-p must be in (0, 1]")
     try:
         from tau2_evolve import benchmark
     except ImportError as exc:

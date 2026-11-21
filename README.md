@@ -106,7 +106,7 @@
 | --- | --- |
 | [src/run_task.py](src/run_task.py) | 运行 τ²-bench 多轮工具交互，按业务域挂载可选手册 |
 | [training/prepare_teacher.py](training/prepare_teacher.py) | 筛选通过官方评分的教师轨迹，保留客服可见的工具消息 |
-| [training/train.sh](training/train.sh) · [合并 adapter](training/merge_adapter.py) | 调用 VeRL 入口进行 SFT 和 GRPO，导出可部署检查点 |
-| [deploy/serve.sh](deploy/serve.sh) · [部署说明](deploy/README.md) | 用 vLLM 部署 2B 客服和 27B 模拟用户 |
+| [training/train.sh](training/train.sh) · [合并 adapter](training/merge_adapter.py) | 用 VeRL 对 2B 或 4B 做 SFT 和 GRPO，导出 LoRA 并合并成可部署检查点 |
+| [deploy/serve.sh](deploy/serve.sh) · [部署说明](deploy/README.md) | 用 vLLM 部署 2B／4B 客服和 27B 模拟用户 |
 
 [MERA-Evolve](https://github.com/yh-yao/MERA-Evolve) · [KnowWhenToHandOff](https://github.com/JaspinXu/KnowWhenToHandOff)
