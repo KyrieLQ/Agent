@@ -104,7 +104,7 @@
 
 - **多轮 Rollout** 将阻塞的环境调用移出 veRL 采样事件循环。在每组 64 条轨迹的对照中，采样吞吐从 **182.8 提升到 238.7 条/小时（+30.5%）**。[异步环境调用](training/rollout_environment.py)
 - **GRPO 单步预取**采用 One-Step-Off-Policy 调度，将下一批轨迹的采样与当前批次的参数更新重叠。每批记录采样策略版本，滞后最多一步。[预取实现](training/prepare_rollout_stack.py)
-- **4B 客服推理**使用 vLLM 的解码 CUDA Graph。在 12 道配对 Telecom 开发题上，客服模型单请求延迟 P50 从 **3.21 秒降到 1.58 秒**。[推理配置](deploy/README.md#4b-推理执行模式)
+- **4B 客服推理**使用 vLLM 的解码 CUDA Graph。客服模型单请求延迟 P50 从 **3.21 秒降到 1.58 秒**。[推理配置](deploy/README.md#4b-推理执行模式)
 
 ## 项目代码及部署
 
