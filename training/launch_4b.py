@@ -18,6 +18,16 @@ def adapt(stage, code):
     code = replace_once(code, module, exporter)
     if stage == "grpo":
         code = replace_once(code, "${BASH_SOURCE[0]}", "$0")
+        if '"$QWEN4B_SHARD_GATHER"' in code:
+            # The archived launcher gathers separately. The exporter below already gathers both ranks.
+            code = replace_once(
+                code,
+                '  if [[ -n "$latest_actor" && -s "$latest_actor/model_world_size_2_rank_0.pt" ]]; then\n'
+                '    extract_source="$OUTPUT_DIR/gathered_lora"\n'
+                '    python -B "$QWEN4B_SHARD_GATHER" "$latest_actor" "$extract_source"\n'
+                '  fi\n',
+                "",
+            )
         code = replace_once(code, "model_world_size_1_rank_0.pt", "model_world_size_2_rank_0.pt")
     return code
 

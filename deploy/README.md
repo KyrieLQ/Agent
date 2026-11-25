@@ -89,3 +89,57 @@ SERVING_PROFILE=4b AGENT_GPUS=0 bash deploy/serve.sh agent "$MERGED_CHECKPOINT"
 python src/run_task.py retail "$TASK_ID" --with-playbook \
   --agent-temperature 0.5 --agent-top-p 0.98 --out runs/retail.json
 ```
+
+Telecom 可开启逐轮任务状态。运行时从客服可见的对话和工具回执提取已查事项、已执行变更和最新客户反馈，交给下一轮决策。
+
+```bash
+python src/run_task.py telecom "$TASK_ID" --with-playbook --with-task-state \
+  --agent-temperature 0.5 --agent-top-p 0.98 --out runs/telecom.json
+```
+
+Telecom 的排障工作流会根据客服可见的证据给出下一步，检查修复后的复测和转接条件。使用 `--with-workflow` 时会同时开启任务状态。运行结果记录每轮的工作流节点和实际纠正动作。
+
+```bash
+python src/run_task.py telecom "$TASK_ID" --with-playbook --with-workflow \
+  --agent-temperature 0.5 --agent-top-p 0.98 --out runs/telecom-workflow.json
+```
+
+流量超限子流程可单独与静态手册配合。它在用量回执确认额度耗尽后提示查价、与客户确认费用和复测，并记录触发的步骤。
+
+```bash
+python src/run_task.py telecom "$TASK_ID" --with-playbook --with-quota-flow \
+  --agent-temperature 0.5 --agent-top-p 0.98 --out runs/telecom-quota.json
+```
+
+## Telecom MCP 工具服务
+
+在已有 τ²-bench 和 LangGraph 环境安装 SDK。分别启动工具服务与客服服务，两个状态目录在重启时继续复用。
+
+```bash
+python -m pip install -r deploy/requirements-mcp.txt
+python src/serve_telecom_mcp.py --state-dir /path/to/mcp-state --port 8768 --with-refuel
+python src/serve_telecom.py --state-dir /path/to/ticket-state \
+  --mcp-url http://127.0.0.1:8768/mcp/ --mcp-refuel
+```
+
+MCP 连接启动时核对原生工具 schema。工具服务读取每次调用的工单快照，LangGraph 收到确认后使用报价 ID 执行加购。工具服务保存加购结果，供失败重试复用。只接入查询时，工具服务省略 `--with-refuel`，客服服务使用 `--mcp-url` 接入查询并使用内置加购执行路径。
+
+## 4B 推理执行模式
+
+单卡 4B 客服可通过 `AGENT_EXECUTION_MODE` 切换 `eager` 和 `cuda-graph`。两种显式模式都使用同步调度，CUDA Graph 模式捕获批大小为 1、2、4、8 的解码请求。
+
+```bash
+SERVING_PROFILE=4b AGENT_EXECUTION_MODE=cuda-graph AGENT_GPUS=0 \
+  bash deploy/serve.sh agent /path/to/merged-4b-checkpoint
+```
+
+## 4B 多轮 Rollout
+
+从带有 Cirrus 训练配方的项目归档准备独立的采样工作目录。准备脚本会沿用源归档的训练题清单。
+
+```bash
+python training/prepare_rollout_stack.py /path/to/archived-grpo-stack /path/to/new-rollout-stack
+MERA_GRPO_ROOT=/path/to/new-rollout-stack TAU2_ENV_THREADS=2 bash training/train.sh grpo-4b
+```
+
+`TAU2_ENV_THREADS` 控制每个 veRL Worker 的环境调用并发，默认 `0` 执行同步路径。设置 `CIRRUS_PREFETCH=1` 可在普通 GRPO 中预取一批，使用采样时记录的 log probabilities，并在账本里记录策略版本和滞后步数。预取默认关闭。

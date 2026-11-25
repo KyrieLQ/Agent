@@ -11,6 +11,7 @@ checkpoint="$2"
 vllm_bin="${VLLM_BIN:-vllm}"
 profile="${SERVING_PROFILE:-default}"
 runtime=(--no-enable-prefix-caching --no-async-scheduling --gdn-prefill-backend triton)
+execution=(--enforce-eager)
 max_seqs=1
 
 case "$role" in
@@ -47,6 +48,20 @@ case "$profile" in
         ;;
     *) echo "Unknown serving profile: $profile" >&2; exit 2 ;;
 esac
+if [[ "${AGENT_EXECUTION_MODE:-default}" != default ]]; then
+    if [[ "$role" != agent || "$profile" != 4b ]]; then
+        echo "AGENT_EXECUTION_MODE requires the 4b agent profile." >&2
+        exit 2
+    fi
+    runtime+=(--no-async-scheduling)
+    case "$AGENT_EXECUTION_MODE" in
+        eager) ;;
+        cuda-graph)
+            execution=(--compilation-config '{"mode":0,"cudagraph_mode":"FULL_DECODE_ONLY","cudagraph_capture_sizes":[1,2,4,8]}')
+            ;;
+        *) echo "AGENT_EXECUTION_MODE must be eager or cuda-graph." >&2; exit 2 ;;
+    esac
+fi
 if ! [[ "$cards" =~ ^[0-9]+(,[0-9]+)*$ ]]; then
     echo "GPU IDs must be comma-separated integers." >&2
     exit 2
@@ -62,4 +77,4 @@ exec "$vllm_bin" serve "$checkpoint" \
     --tensor-parallel-size "${#gpu_ids[@]}" \
     --gpu-memory-utilization "$memory" --max-model-len "$length" \
     --max-num-seqs "${SERVE_MAX_SEQS:-$max_seqs}" --max-num-batched-tokens 4096 --enable-chunked-prefill \
-    --enforce-eager "${runtime[@]}" "${extra[@]}"
+    "${execution[@]}" "${runtime[@]}" "${extra[@]}"

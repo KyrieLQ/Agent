@@ -1,5 +1,6 @@
 """Run a user-specified τ²-bench task with the official evaluator."""
 import argparse
+from contextlib import nullcontext
 import json
 from pathlib import Path
 
@@ -12,6 +13,9 @@ def build_parser():
     parser.add_argument("domain", choices=("telecom", "retail", "airline"))
     parser.add_argument("task_id")
     parser.add_argument("--with-playbook", action="store_true")
+    parser.add_argument("--with-task-state", action="store_true", help="Supply per-turn task state for Telecom")
+    parser.add_argument("--with-workflow", action="store_true", help="Guide and check Telecom troubleshooting decisions")
+    parser.add_argument("--with-quota-flow", action="store_true", help="Guide Telecom refueling after confirmed exhaustion")
     parser.add_argument("--agent-url", default="http://127.0.0.1:8260/v1")
     parser.add_argument("--user-url", default="http://127.0.0.1:8261/v1")
     parser.add_argument("--agent-model", default="openai/evol-llm-agent")
@@ -40,11 +44,24 @@ def run(args, benchmark):
         manual = (ROOT / "playbooks" / f"{args.domain}.txt").read_text(encoding="utf-8").strip()
         if not manual:
             raise ValueError(f"Empty playbook for {args.domain}")
-    result = benchmark.run_task(
-        domain=args.domain, task_id=args.task_id, seed=args.seed,
-        agent_spec=agent, user_spec=user, max_steps=args.max_steps,
-        max_errors=10, skill_text=manual,
-    )
+    state_context = nullcontext()
+    if args.with_task_state or args.with_workflow or args.with_quota_flow:
+        from telecom_state import with_telecom_task_state
+
+        state_context = with_telecom_task_state(workflow=args.with_workflow, quota=args.with_quota_flow)
+    with state_context as tracker:
+        result = benchmark.run_task(
+            domain=args.domain, task_id=args.task_id, seed=args.seed,
+            agent_spec=agent, user_spec=user, max_steps=args.max_steps,
+            max_errors=10, skill_text=manual,
+        )
+        if args.with_quota_flow:
+            result["quota_steps"] = tracker.agent.quota_steps
+        elif tracker is not None:
+            result["structured_task_state_turns"] = tracker.agent.state_turns
+            if args.with_workflow:
+                result["workflow_steps"] = tracker.agent.workflow_steps
+                result["workflow_corrections"] = tracker.agent.workflow_corrections
     if manual and manual not in result["system_prompt"]:
         raise RuntimeError("The playbook did not reach the agent's system prompt")
     result["seed"] = args.seed
@@ -57,6 +74,10 @@ def main():
         raise SystemExit("max-steps must be positive and temperature non-negative")
     if not 0.0 < args.agent_top_p <= 1.0:
         raise SystemExit("agent-top-p must be in (0, 1]")
+    if (args.with_task_state or args.with_workflow or args.with_quota_flow) and args.domain != "telecom":
+        raise SystemExit("Task state and workflows are available for Telecom tasks")
+    if args.with_quota_flow and (args.with_task_state or args.with_workflow):
+        raise SystemExit("Select the standalone quota flow or the general task-state workflow")
     try:
         from tau2_evolve import benchmark
     except ImportError as exc:
